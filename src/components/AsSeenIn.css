@@ -1,0 +1,71 @@
+.as-seen-in-section {
+  background: #fff;
+  padding: 56px 0 32px 0;
+  text-align: center;
+}
+
+.debug-border {
+  border: 2px dashed #e2a84b;
+}
+
+.as-seen-in-title {
+  color: #e2a84b;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  margin-bottom: 32px;
+  text-transform: uppercase;
+  font-family: inherit;
+}
+
+.as-seen-in-logos {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 48px;
+  margin-bottom: 32px;
+}
+
+.as-seen-in-logo {
+  height: 56px;
+  filter: grayscale(1) brightness(0.7);
+  opacity: 0.8;
+  transition: filter 0.2s, opacity 0.2s;
+  max-width: 180px;
+  width: auto;
+  border: none;
+  background: none;
+  padding: 0;
+  box-shadow: none;
+}
+
+.as-seen-in-divider {
+  border: none;
+  border-top: 1px solid #ececec;
+  margin: 0 2vw;
+}
+
+@media (max-width: 900px) {
+  .as-seen-in-logo {
+    height: 40px;
+    max-width: 120px;
+  }
+  .as-seen-in-section {
+    padding: 40px 0 24px 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .as-seen-in-logos {
+    flex-wrap: wrap;
+    gap: 24px 0;
+  }
+  .as-seen-in-logo {
+    height: 32px;
+    max-width: 90px;
+  }
+  .as-seen-in-section {
+    padding: 32px 0 16px 0;
+  }
+} 
