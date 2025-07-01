@@ -125,6 +125,7 @@ export default function CuratedPicks() {
   const navigate = useNavigate();
   const cardRefs = useRef([]);
   const [visibleCards, setVisibleCards] = useState([]);
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth > 900);
 
   useEffect(() => {
     setLoading(true);
@@ -161,35 +162,48 @@ export default function CuratedPicks() {
     return () => observer.disconnect();
   }, [recipes]);
 
+  useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth > 900);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
     <div style={{ background: '#faf9f7', padding: '56px 0 48px 0' }}>
       <style>{fadeInKeyframes}</style>
       <div style={sectionHeading}>Curated Picks</div>
       <hr style={divider} />
-      <div style={tabStyles}>
-        {TABS.map(tab => (
-          <button
-            key={tab.key}
-            style={tabBtnStyles(activeTab === tab.key)}
-            onClick={() => setActiveTab(tab.key)}
-            aria-selected={activeTab === tab.key}
-            onMouseOver={e => e.currentTarget.style.background = '#f5b945'}
-            onMouseOut={e => e.currentTarget.style.background = activeTab === tab.key ? '#fff' : 'transparent'}
-          >
-            {tab.label}
-            {activeTab === tab.key && (
-              <span style={{
-                display: 'block',
-                position: 'absolute',
-                left: 0, right: 0, bottom: -6,
-                height: 6,
-                background: '#f5b945',
-                borderRadius: '0 0 8px 8px',
-              }} />
-            )}
-          </button>
-        ))}
-      </div>
+      {isDesktop && (
+        <div style={tabStyles} className="curated-tabs-row">
+          {TABS.map(tab => (
+            <button
+              key={tab.key}
+              style={tabBtnStyles(activeTab === tab.key)}
+              onClick={() => setActiveTab(tab.key)}
+              aria-selected={activeTab === tab.key}
+              onMouseOver={e => e.currentTarget.style.background = '#f5b945'}
+              onMouseOut={e => e.currentTarget.style.background = activeTab === tab.key ? '#fff' : 'transparent'}
+            >
+              {tab.label}
+              {activeTab === tab.key && (
+                <span style={{
+                  display: 'block',
+                  position: 'absolute',
+                  left: 0, right: 0, bottom: -6,
+                  height: 6,
+                  background: '#f5b945',
+                  borderRadius: '0 0 8px 8px',
+                }} />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+      <style>{`
+        @media (max-width: 900px) {
+          .curated-tabs-row { display: none !important; }
+        }
+      `}</style>
       <div style={gridStyle}>
         {loading ? (
           Array.from({ length: 4 }).map((_, idx) => (
@@ -203,7 +217,7 @@ export default function CuratedPicks() {
               data-idx={idx}
               className={visibleCards.includes(idx) ? 'fade-in-card' : ''}
               style={{ ...cardStyles, ...(hovered === idx ? cardHover : {}), animationDelay: `${idx * 0.08 + 0.1}s` }}
-              onClick={() => navigate(`/recipes/${recipe.id}`)}
+              onClick={() => navigate(`/recipes/detail/${recipe.id}`)}
               tabIndex={0}
               role="button"
               aria-label={recipe.name}

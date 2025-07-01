@@ -61,7 +61,7 @@ export default function Recipes() {
       <h2>{category ? `${category.charAt(0).toUpperCase() + category.slice(1).replace(/-/g, ' ')} Recipes` : 'All Recipes'}</h2>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 24 }}>
         {recipes.map(recipe => (
-          <Link to={`/recipes/${recipe.id}`} key={recipe.id} style={{ textDecoration: 'none', color: 'inherit' }}>
+          <Link to={`/recipes/detail/${recipe.id}`} key={recipe.id} style={{ textDecoration: 'none', color: 'inherit' }}>
             <div style={{ border: '1px solid #eee', borderRadius: 8, overflow: 'hidden', background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
               <img src={recipe.image} alt={recipe.name} style={{ width: '100%', height: 160, objectFit: 'cover' }} />
               <div style={{ padding: 12, fontWeight: 600, fontSize: 18 }}>{recipe.name}</div>

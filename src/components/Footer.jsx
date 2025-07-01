@@ -24,21 +24,23 @@ const links2 = cuisinesData
 
 export default function Footer() {
   return (
-    <footer style={{ background: '#fff', borderTop: '8px solid #555', marginTop: 48, padding: '0 0 32px 0' }}>
+    <footer style={{ background: '#fff', marginTop: 48, padding: '0 0 32px 0', borderTop: '1px solid #e5e5e5' }}>
       <div className="footer-outer">
         <div className="footer-main-row">
           {/* Links columns */}
-          <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 700, letterSpacing: '0.08em', fontSize: 14, marginBottom: 12 }}>PINCH OF YUM</div>
-            {links1.map(link => (
-              <a key={link.label} href={link.href} style={{ fontSize: 15, color: '#444', marginBottom: 6, display: 'block', textDecoration: 'none' }}>{link.label}</a>
-            ))}
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 700, letterSpacing: '0.08em', fontSize: 14, marginBottom: 12 }}>FOOD & RECIPES</div>
-            {links2.map(link => (
-              <a key={link.label} href={link.href} style={{ fontSize: 15, color: '#444', marginBottom: 6, display: 'block', textDecoration: 'none' }}>{link.label}</a>
-            ))}
+          <div className="footer-links-row">
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 700, letterSpacing: '0.08em', fontSize: 14, marginBottom: 12 }}>PINCH OF YUM</div>
+              {links1.map(link => (
+                <a key={link.label} href={link.href} style={{ fontSize: 15, color: '#444', marginBottom: 6, display: 'block', textDecoration: 'none' }}>{link.label}</a>
+              ))}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 700, letterSpacing: '0.08em', fontSize: 14, marginBottom: 12 }}>FOOD & RECIPES</div>
+              {links2.map(link => (
+                <a key={link.label} href={link.href} style={{ fontSize: 15, color: '#444', marginBottom: 6, display: 'block', textDecoration: 'none' }}>{link.label}</a>
+              ))}
+            </div>
           </div>
           {/* Signup box */}
           <div className="footer-signup-container">
@@ -66,7 +68,7 @@ export default function Footer() {
           </div>
         </div>
         {/* Social icons */}
-        <div style={{ display: 'flex', gap: 18, margin: '32px 0 0 0', alignItems: 'center' }}>
+        <div className="footer-social-row" style={{ display: 'flex', gap: 18, margin: '32px 0 0 0', alignItems: 'center', justifyContent: 'flex-start' }}>
           <FaInstagram size={26} style={{ color: '#6e3a59' }} />
           <FaPinterest size={26} style={{ color: '#6e3a59' }} />
           <FaTiktok size={26} style={{ color: '#6e3a59' }} />
@@ -75,12 +77,12 @@ export default function Footer() {
           <FaYoutube size={26} style={{ color: '#6e3a59' }} />
         </div>
         {/* Logo and copyright */}
-        <div style={{ margin: '32px 0 0 0', display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
+        <div className="footer-logo-row" style={{ margin: '32px 0 0 0', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
           <span style={{ display: 'flex', alignItems: 'center' }}>
             <span style={{ fontFamily: 'Lora, serif', fontSize: 32, fontWeight: 400, color: '#6e3a59', letterSpacing: '-2px', marginRight: 6 }}>pinch</span>
             <span style={{ fontFamily: 'Dancing Script, cursive', fontSize: 32, fontWeight: 400, color: '#aaa', marginLeft: -2 }}>of yum</span>
           </span>
-          <span style={{ fontSize: 13, color: '#888', marginLeft: 18, lineHeight: 1.4, display: 'flex', flexDirection: 'column' }}>
+          <span style={{ fontSize: 13, color: '#888', lineHeight: 1.4, display: 'flex', flexDirection: 'column' }}>
             <span>© 2025 Pinch of Yum. All Rights Reserved.</span>
             <span style={{ display: 'block' }}>A Raptive Partner Site.</span>
           </span>

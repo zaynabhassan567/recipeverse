@@ -1,9 +1,9 @@
 import React from 'react';
 import HeroShowcase from '../components/HeroShowcase';
 import CuisinesNav from '../components/CuisinesNav';
+import CuratedPicks from '../components/CuratedPicks';
 import HeroSearch from '../components/HeroSearch';
 import AsSeenIn from '../components/AsSeenIn';
-import CuratedPicks from '../components/CuratedPicks';
 import AboutSection from '../components/AboutSection';
 import AboutFooterBar from '../components/AboutFooterBar';
 
