@@ -146,6 +146,50 @@ const AllRecipesPage = () => {
     setPage(Number(searchParams.get('page')) || 1);
   }, []);
 
+  // Add handlers for update, delete, and add
+  const handleDeleteRecipe = (id) => {
+    setRecipes(prev => {
+      const updated = prev.filter(r => r.id !== id);
+      console.log('Updated recipes:', updated);
+      return updated;
+    });
+  };
+  const handleUpdateRecipe = (recipe) => {
+    const name = prompt('Edit recipe name:', recipe.name);
+    if (name === null) return;
+    const image = prompt('Edit image URL:', recipe.image);
+    if (image === null) return;
+    const category = prompt('Edit category:', recipe.category || '');
+    if (category === null) return;
+    const cuisine = prompt('Edit cuisine:', recipe.cuisine || '');
+    if (cuisine === null) return;
+    const rating = Number(prompt('Edit rating (0-5):', recipe.rating || 0));
+    if (isNaN(rating)) return;
+    setRecipes(prev => {
+      const updated = prev.map(r => r.id === recipe.id ? { ...r, name, image, category, cuisine, rating } : r);
+      console.log('Updated recipes:', updated);
+      return updated;
+    });
+  };
+  const handleAddRecipe = () => {
+    const name = prompt('Recipe name:');
+    if (!name) return;
+    const image = prompt('Image URL:');
+    if (!image) return;
+    const category = prompt('Category:');
+    if (category === null) return;
+    const cuisine = prompt('Cuisine:');
+    if (cuisine === null) return;
+    const rating = Number(prompt('Rating (0-5):', 0));
+    if (isNaN(rating)) return;
+    setRecipes(prev => {
+      const newRecipe = { id: Date.now(), name, image, category, cuisine, rating };
+      const updated = [...prev, newRecipe];
+      console.log('Updated recipes:', updated);
+      return updated;
+    });
+  };
+
   return (
     <div style={{ background: '#fff', minHeight: '100vh', paddingBottom: 48 }}>
       <div style={{

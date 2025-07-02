@@ -10,6 +10,7 @@
     "antd": "^5.26.3",
     "axios": "^1.10.0",
     "bootstrap": "^5.3.0",
+    "formik": "^2.4.6",
     "react": "^19.1.0",
     "react-bootstrap": "^2.10.10",
     "react-dom": "^19.1.0",
@@ -17,6 +18,7 @@
     "react-router-dom": "^7.6.2",
     "react-scripts": "5.0.1",
     "react-slick": "^0.30.3",
+    "recharts": "^3.0.2",
     "slick-carousel": "^1.8.1",
     "web-vitals": "^2.1.4"
   },

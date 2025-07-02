@@ -11,7 +11,14 @@ import CuisineListingPage from './pages/CuisineListingPage';
 import SearchResultsPage from './pages/SearchResultsPage';
 import About from './pages/About';
 import SplashScreen from './components/SplashScreen';
+import Login from './pages/Login';
+import AdminLayout from './pages/AdminLayout';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminRecipes from './pages/AdminRecipes';
+import AdminCuisines from './pages/AdminCuisines';
+import { RecipesProvider } from './contexts/RecipesContext';
 import './styles/global.css';
+import StartHere from './pages/StartHere';
 
 // ScrollToTop component
 function ScrollToTop() {
@@ -22,13 +29,15 @@ function ScrollToTop() {
   return null;
 }
 
-const App = () => {
+function AppRoutes() {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
   return (
-    <Router>
+    <>
       <SplashScreen />
       <ScrollToTop />
-      <TopBar />
-      <Navbar />
+      {!isAdminRoute && <TopBar />}
+      {!isAdminRoute && <Navbar />}
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/recipes" element={<Recipes />} />
@@ -37,10 +46,27 @@ const App = () => {
         <Route path="/recipes/detail/:id" element={<RecipeDetail />} />
         <Route path="/recipes/:cuisineName" element={<CuisineListingPage />} />
         <Route path="/about" element={<About />} />
+        <Route path="/start" element={<StartHere />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/admin" element={
+          <RecipesProvider>
+            <AdminLayout />
+          </RecipesProvider>
+        }>
+          <Route index element={<AdminDashboard />} />
+          <Route path="recipes" element={<AdminRecipes />} />
+          <Route path="cuisines" element={<AdminCuisines />} />
+        </Route>
       </Routes>
-      <Footer />
+      {!isAdminRoute && <Footer />}
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <Router>
+      <AppRoutes />
     </Router>
   );
-};
-
-export default App; 
+} 

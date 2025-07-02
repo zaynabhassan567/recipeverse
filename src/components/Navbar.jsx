@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { FaSearch, FaStar } from 'react-icons/fa';
 import { Drawer } from 'antd';
 import { IoClose } from 'react-icons/io5';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const navLinks = [
   { label: 'HOME', href: '/' },
@@ -356,17 +356,17 @@ const Header = () => {
       `}</style>
       <div style={innerStyle}>
         {/* Logo */}
-        <a href="/" style={logoStyle}>
+        <Link to="/" style={logoStyle}>
           <span style={pinchStyle}>pinch</span>
           <span style={{...ofYumStyle, fontFamily: 'Dancing Script, cursive'}}>of</span>
           <span style={pinchStyle}>yum</span>
-        </a>
+        </Link>
         {/* Nav Links (desktop only) */}
         <nav style={navStyle} className="desktop-nav">
           {navLinks.map(link => (
-            <a key={link.label} href={link.href} style={linkStyle} className="nav-link-custom">
+            <Link key={link.label} to={link.href} style={linkStyle} className="nav-link-custom">
               {link.label}
-            </a>
+            </Link>
           ))}
           {!searchDrawerOpen && (
             <FaSearch
@@ -416,9 +416,9 @@ const Header = () => {
         }}>
           <div style={drawerLinksContainer}>
             {navLinks.map(link => (
-              <a key={link.label} href={link.href} style={drawerLinkStyle} onClick={() => setDrawerOpen(false)}>
+              <Link key={link.label} to={link.href} style={drawerLinkStyle} onClick={() => setDrawerOpen(false)}>
                 {link.label}
-              </a>
+              </Link>
             ))}
             <FaSearch style={drawerSearchIconStyle} />
           </div>
