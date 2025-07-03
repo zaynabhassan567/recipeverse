@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import TopBar from './components/TopBar';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -19,6 +19,9 @@ import AdminCuisines from './pages/AdminCuisines';
 import { RecipesProvider } from './contexts/RecipesContext';
 import './styles/global.css';
 import StartHere from './pages/StartHere';
+import { auth } from './firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import Signup from './pages/Signup';
 
 // ScrollToTop component
 function ScrollToTop() {
@@ -29,16 +32,40 @@ function ScrollToTop() {
   return null;
 }
 
+// ProtectedRoute component
+function ProtectedRoute({ children }) {
+  const [authChecked, setAuthChecked] = React.useState(false);
+  const [user, setUser] = React.useState(null);
+
+  React.useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
+      setAuthChecked(true);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  if (!authChecked) {
+    return <div style={{margin: 80, fontSize: 22, color: '#b03060'}}>Checking authentication...</div>;
+  }
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+}
+
 function AppRoutes() {
   const location = useLocation();
-  const isAdminRoute = location.pathname.startsWith('/admin');
+  const navigate = useNavigate();
+  const state = location.state;
+
   return (
     <>
       <SplashScreen />
       <ScrollToTop />
-      {!isAdminRoute && <TopBar />}
-      {!isAdminRoute && <Navbar />}
-      <Routes>
+      {!location.pathname.startsWith('/admin') && <TopBar />}
+      {!location.pathname.startsWith('/admin') && <Navbar />}
+      <Routes location={state?.backgroundLocation || location}>
         <Route path="/" element={<Home />} />
         <Route path="/recipes" element={<Recipes />} />
         <Route path="/recipes/all" element={<AllRecipesPage />} />
@@ -48,17 +75,20 @@ function AppRoutes() {
         <Route path="/about" element={<About />} />
         <Route path="/start" element={<StartHere />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
         <Route path="/admin" element={
-          <RecipesProvider>
-            <AdminLayout />
-          </RecipesProvider>
+          <ProtectedRoute>
+            <RecipesProvider>
+              <AdminLayout />
+            </RecipesProvider>
+          </ProtectedRoute>
         }>
           <Route index element={<AdminDashboard />} />
           <Route path="recipes" element={<AdminRecipes />} />
           <Route path="cuisines" element={<AdminCuisines />} />
         </Route>
       </Routes>
-      {!isAdminRoute && <Footer />}
+      {!location.pathname.startsWith('/admin') && location.pathname !== '/login' && <Footer />}
     </>
   );
 }

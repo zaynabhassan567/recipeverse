@@ -1,6 +1,8 @@
 import React from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { signOut } from 'firebase/auth';
+import { auth } from '../firebase';
 
 // Modern magenta/purple dashboard color variables
 const dashboardColors = {
@@ -112,11 +114,13 @@ export default function AdminLayout() {
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/');
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 700);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 700);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
   return (
     <div style={dashboardColors}>
       <style>{sidebarButtonHoverCSS}</style>
@@ -219,7 +223,7 @@ export default function AdminLayout() {
                 <button
                   className="admin-sidebar-btn"
                   style={logoutButtonStyle}
-                  onClick={() => { setDrawerOpen(false); navigate('/'); }}
+                  onClick={async () => { await signOut(auth); navigate('/login'); }}
                 >
                   <span role="img" aria-label="Logout">🚪</span> LOGOUT
                 </button>
@@ -268,7 +272,7 @@ export default function AdminLayout() {
           <button
             className="admin-sidebar-btn"
             style={logoutButtonStyle}
-            onClick={() => navigate('/')}
+            onClick={async () => { await signOut(auth); navigate('/login'); }}
             onMouseOver={e => e.currentTarget.style.background = 'rgba(232,67,147,0.28)'}
             onMouseOut={e => e.currentTarget.style.background = 'rgba(232,67,147,0.18)'}
           >
