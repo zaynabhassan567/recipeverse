@@ -3,6 +3,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
+import UserProfileChip from '../components/UserProfileChip';
 
 // Modern magenta/purple dashboard color variables
 const dashboardColors = {
@@ -87,14 +88,6 @@ const sidebarButtonActive = {
 const sidebarButtonHover = {
   background: 'rgba(255,255,255,0.18)',
   color: '#fff',
-};
-const logoutButtonStyle = {
-  ...sidebarButtonBase,
-  color: '#fff',
-  background: 'rgba(232,67,147,0.18)',
-  borderLeft: '5px solid #e75480',
-  marginTop: 'auto',
-  marginBottom: 24,
 };
 
 // Add improved hover effect styles for sidebar buttons
@@ -220,13 +213,6 @@ export default function AdminLayout() {
                 >
                   <span role="img" aria-label="Cuisines">🍲</span> CUISINES
                 </button>
-                <button
-                  className="admin-sidebar-btn"
-                  style={logoutButtonStyle}
-                  onClick={async () => { await signOut(auth); navigate('/login'); }}
-                >
-                  <span role="img" aria-label="Logout">🚪</span> LOGOUT
-                </button>
               </div>
             </>
           )}
@@ -269,19 +255,15 @@ export default function AdminLayout() {
           >
             <span role="img" aria-label="Cuisines">🍲</span> CUISINES
           </button>
-          <button
-            className="admin-sidebar-btn"
-            style={logoutButtonStyle}
-            onClick={async () => { await signOut(auth); navigate('/login'); }}
-            onMouseOver={e => e.currentTarget.style.background = 'rgba(232,67,147,0.28)'}
-            onMouseOut={e => e.currentTarget.style.background = 'rgba(232,67,147,0.18)'}
-          >
-            <span role="img" aria-label="Logout">🚪</span> LOGOUT
-          </button>
         </div>
       )}
       {/* Topbar */}
-      <div style={topbarStyle}>Admin Dashboard</div>
+      <div style={topbarStyle}>
+        <span>Admin Dashboard</span>
+        <div style={{ position: 'absolute', right: 32, top: 12 }}>
+          <UserProfileChip />
+        </div>
+      </div>
       {/* Main Content */}
       <div style={contentStyle}>
         <Outlet />

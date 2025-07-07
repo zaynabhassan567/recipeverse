@@ -4,7 +4,7 @@ import aboutLifestyle from '../assets/about-lifestyle.jpg';
 
 export default function StartHere() {
   return (
-    <div style={{ background: '#f8f6f3', minHeight: '100vh', padding: 0 }}>
+    <div style={{ position: 'relative', background: '#f8f6f3', minHeight: '100vh', padding: 0 }}>
       {/* <CustomCursor /> */}
       <style>{`
         .advanced-hover {

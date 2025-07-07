@@ -3,6 +3,7 @@ import { FaSearch, FaStar } from 'react-icons/fa';
 import { Drawer } from 'antd';
 import { IoClose } from 'react-icons/io5';
 import { useNavigate, Link } from 'react-router-dom';
+import UserProfileChip from './UserProfileChip';
 
 const navLinks = [
   { label: 'HOME', href: '/' },
@@ -368,13 +369,16 @@ const Header = () => {
               {link.label}
             </Link>
           ))}
-          {!searchDrawerOpen && (
-            <FaSearch
-              style={searchIconStyle}
-              className="desktop-search"
-              onClick={() => setSearchDrawerOpen(true)}
-            />
-          )}
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            {!searchDrawerOpen && (
+              <FaSearch
+                style={searchIconStyle}
+                className="desktop-search"
+                onClick={() => setSearchDrawerOpen(true)}
+              />
+            )}
+            <UserProfileChip />
+          </div>
         </nav>
         {/* Hamburger (mobile only) */}
         <button

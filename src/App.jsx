@@ -22,6 +22,8 @@ import StartHere from './pages/StartHere';
 import { auth } from './firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import Signup from './pages/Signup';
+import { useDispatch } from 'react-redux';
+import { watchAuthState } from './userSlice';
 
 // ScrollToTop component
 function ScrollToTop() {
@@ -94,6 +96,10 @@ function AppRoutes() {
 }
 
 export default function App() {
+  const dispatch = useDispatch();
+  React.useEffect(() => {
+    dispatch(watchAuthState());
+  }, [dispatch]);
   return (
     <Router>
       <AppRoutes />
