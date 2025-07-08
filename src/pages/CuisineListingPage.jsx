@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import CuisineIntro from '../components/CuisineIntro';
 import TopRecipesSlider from '../components/TopRecipesSlider';
+import { subscribeToAllRecipes } from '../services/recipeApi';
 // import RecipesGrid from '../components/RecipesGrid';
 
 const CuisineListingPage = () => {
@@ -12,24 +13,18 @@ const CuisineListingPage = () => {
 
   useEffect(() => {
     setLoading(true);
-    fetch('https://dummyjson.com/recipes?limit=100')
-      .then(res => res.json())
-      .then(data => {
-        console.log('Fetched recipes:', data.recipes);
-        // Match cuisineName with cuisine, category, or tags (partial, case-insensitive)
-        const filtered = (data.recipes || []).filter(r => {
-          const cuisineMatch = (r.cuisine || '').toLowerCase().includes(cuisineName.toLowerCase());
-          const categoryMatch = (r.category || '').toLowerCase().includes(cuisineName.toLowerCase());
-          const tagsMatch = Array.isArray(r.tags) && r.tags.some(tag => tag.toLowerCase().includes(cuisineName.toLowerCase()));
-          return cuisineMatch || categoryMatch || tagsMatch;
-        });
-        setRecipes(filtered);
-        setLoading(false);
-      })
-      .catch(() => {
-        setError('Failed to fetch recipes.');
-        setLoading(false);
+    const unsubscribe = subscribeToAllRecipes((allRecipes) => {
+      // Filter by cuisine (case-insensitive, partial match)
+      const filtered = (allRecipes || []).filter(r => {
+        const cuisineMatch = (r.cuisine || '').toLowerCase().includes(cuisineName.toLowerCase());
+        const categoryMatch = (r.category || '').toLowerCase().includes(cuisineName.toLowerCase());
+        const tagsMatch = Array.isArray(r.tags) && r.tags.some(tag => tag.toLowerCase().includes(cuisineName.toLowerCase()));
+        return cuisineMatch || categoryMatch || tagsMatch;
       });
+      setRecipes(filtered);
+      setLoading(false);
+    });
+    return () => unsubscribe();
   }, [cuisineName]);
 
   // Compute top 1 recipe for slider if 2 or more, else all in slider
@@ -68,9 +63,9 @@ const CuisineListingPage = () => {
             padding: '0 16px'
           }}>
             {gridRecipes.map(recipe => (
-              <a
+              <Link
                 key={recipe.id}
-                href={`/recipes/detail/${recipe.id}`}
+                to={`/recipes/detail/${recipe.id}`}
                 style={{
                   textDecoration: 'none',
                   color: 'inherit',
@@ -114,7 +109,7 @@ const CuisineListingPage = () => {
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}>{recipe.name}</div>
-              </a>
+              </Link>
             ))}
           </div>
         )}

@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { cuisinesData } from '../utils/cusinesData';
+import { fetchCuisinesData } from '../utils/cusinesData';
 import Slider from 'react-slick';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import '../styles/global.css';
@@ -21,6 +21,12 @@ function Arrow(props) {
 
 export default function CuisinesNav() {
   const navigate = useNavigate();
+  const [cuisines, setCuisines] = useState([]);
+
+  useEffect(() => {
+    fetchCuisinesData().then(setCuisines);
+  }, []);
+
   const settings = {
     infinite: false,
     speed: 500,
@@ -44,11 +50,12 @@ export default function CuisinesNav() {
       }
     ]
   };
+
   return (
     <div className="cuisines-nav-slider">
       <Slider {...settings}>
-        {cuisinesData.map(cuisine => (
-          <div key={cuisine.name} className="cuisine-slider-item">
+        {cuisines.map(cuisine => (
+          <div key={cuisine.id || cuisine.name} className="cuisine-slider-item">
             <div
               className="cuisine-btn"
               onClick={() => navigate(`/recipes/${cuisine.name.toLowerCase()}`)}

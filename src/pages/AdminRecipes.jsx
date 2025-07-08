@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { useRecipes } from '../contexts/RecipesContext';
-import { cuisinesData } from '../utils/cusinesData';
+import { useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
+import { fetchCuisinesData } from '../utils/cusinesData';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
+import { addRecipeSaga, updateRecipeSaga, deleteRecipeSaga } from '../recipesSlice';
+import { uploadRecipeImage } from '../services/recipeApi';
 
 const cardStyle = {
   background: '#fff',
@@ -104,15 +107,17 @@ function Modal({ open, onClose, children }) {
 }
 
 export default function AdminRecipes() {
-  const { recipes, setRecipes, loading } = useRecipes();
+  const recipes = useSelector((state) => state.recipes.items);
+  const dispatch = useDispatch();
   const [error, setError] = useState(null);
   const [modal, setModal] = useState(null); // { type: 'add' | 'update' | 'delete', recipe: object|null }
   const [success, setSuccess] = useState('');
   const [actionModal, setActionModal] = useState(null); // { recipe: object|null }
   const [hoveredCard, setHoveredCard] = useState(null);
+  const [cuisines, setCuisines] = useState([]);
 
   // Add/Update form state
-  const [form, setForm] = useState({ name: '', cuisine: '', difficulty: 'Easy', ingredients: '', image: '', uploadedImage: '' });
+  const [form, setForm] = useState({ name: '', cuisine: '', difficulty: 'Easy', ingredients: '', instructions: '', prepTimeMinutes: '', cookTimeMinutes: '', servings: '', image: '', uploadedImage: '', uploadedImageFile: null });
 
   // Handle image upload
   const handleImageUpload = (e) => {
@@ -120,59 +125,61 @@ export default function AdminRecipes() {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setForm(f => ({ ...f, uploadedImage: reader.result }));
+        setForm(f => ({ ...f, uploadedImage: reader.result, uploadedImageFile: file }));
       };
       reader.readAsDataURL(file);
     }
   };
 
   // Add Recipe
-  function handleAddRecipe(e) {
+  async function handleAddRecipe(e) {
     e.preventDefault();
-    const imageToUse = form.uploadedImage || form.image;
+    let imageToUse = form.image;
+    if (form.uploadedImageFile) {
+      imageToUse = await uploadRecipeImage(form.uploadedImageFile, form.name);
+    }
     const newRecipe = {
-      id: Date.now(),
       name: form.name,
+      title: form.name, // Ensure search compatibility
       cuisine: form.cuisine,
       difficulty: form.difficulty,
-      ingredients: form.ingredients.split(',').map(i => i.trim()).filter(Boolean),
+      ingredients: form.ingredients.split('\n').map(i => i.trim()).filter(Boolean),
+      instructions: form.instructions.split('\n').map(i => i.trim()).filter(Boolean),
+      prepTimeMinutes: form.prepTimeMinutes ? Number(form.prepTimeMinutes) : undefined,
+      cookTimeMinutes: form.cookTimeMinutes ? Number(form.cookTimeMinutes) : undefined,
+      servings: form.servings ? Number(form.servings) : undefined,
       image: imageToUse,
     };
-    setRecipes(prev => {
-      const updated = [...prev, newRecipe];
-      console.log('Updated recipes:', updated);
-      return updated;
-    });
+    dispatch(addRecipeSaga(newRecipe));
     setSuccess('Recipe added!');
     setModal(null);
-    setForm({ name: '', cuisine: '', difficulty: 'Easy', ingredients: '', image: '', uploadedImage: '' });
+    setForm({ name: '', cuisine: '', difficulty: 'Easy', ingredients: '', instructions: '', prepTimeMinutes: '', cookTimeMinutes: '', servings: '', image: '', uploadedImage: '', uploadedImageFile: null });
     setTimeout(() => setSuccess(''), 2000);
   }
 
   // Update Recipe
-  function handleUpdateRecipe(e) {
+  async function handleUpdateRecipe(e) {
     e.preventDefault();
-    setRecipes(prev => {
-      const updated = prev.map(r => r.id === modal.recipe.id ? { ...r, ...form, ingredients: form.ingredients.split(',').map(i => i.trim()).filter(Boolean) } : r);
-      console.log('Updated recipes:', updated);
-      return updated;
-    });
+    let imageToUse = form.image;
+    if (form.uploadedImageFile) {
+      imageToUse = await uploadRecipeImage(form.uploadedImageFile, form.name);
+    }
+    dispatch(updateRecipeSaga({ ...form, ingredients: form.ingredients.split(',').map(i => i.trim()).filter(Boolean), instructions: form.instructions.split('\n').map(i => i.trim()).filter(Boolean), prepTimeMinutes: form.prepTimeMinutes ? Number(form.prepTimeMinutes) : undefined, cookTimeMinutes: form.cookTimeMinutes ? Number(form.cookTimeMinutes) : undefined, servings: form.servings ? Number(form.servings) : undefined, image: imageToUse, id: modal.recipe.id }));
     setSuccess('Recipe updated!');
     setModal(null);
-    setForm({ name: '', cuisine: '', difficulty: 'Easy', ingredients: '', image: '', uploadedImage: '' });
+    setForm({ name: '', cuisine: '', difficulty: 'Easy', ingredients: '', instructions: '', prepTimeMinutes: '', cookTimeMinutes: '', servings: '', image: '', uploadedImage: '', uploadedImageFile: null });
     setTimeout(() => setSuccess(''), 2000);
   }
 
   // Delete Recipe
   function handleDeleteRecipe(e) {
     e.preventDefault();
-    setRecipes(prev => {
-      const updated = prev.filter(r => r.id !== modal.recipe.id);
-      console.log('Updated recipes:', updated);
-      return updated;
-    });
+    if (!modal || !modal.recipe) return;
+    dispatch(deleteRecipeSaga(modal.recipe.id));
     setSuccess('Recipe deleted!');
     setModal(null);
+    setActionModal(null);
+    dispatch({ type: 'recipes/fetchRecipesSaga' });
     setTimeout(() => setSuccess(''), 2000);
   }
 
@@ -183,17 +190,30 @@ export default function AdminRecipes() {
       cuisine: recipe.cuisine || '',
       difficulty: recipe.difficulty || 'Easy',
       ingredients: (recipe.ingredients || []).join(', '),
+      instructions: (recipe.instructions || []).join('\n'),
+      prepTimeMinutes: recipe.prepTimeMinutes || '',
+      cookTimeMinutes: recipe.cookTimeMinutes || '',
+      servings: recipe.servings || '',
       image: recipe.image || '',
     });
     setModal({ type: 'update', recipe });
   };
   const openDeleteModal = (recipe) => {
+    setActionModal(null);
     setModal({ type: 'delete', recipe });
   };
   const openAddModal = () => {
-    setForm({ name: '', cuisine: '', difficulty: 'Easy', ingredients: '', image: '', uploadedImage: '' });
+    setForm({ name: '', cuisine: '', difficulty: 'Easy', ingredients: '', instructions: '', prepTimeMinutes: '', cookTimeMinutes: '', servings: '', image: '', uploadedImage: '', uploadedImageFile: null });
     setModal({ type: 'add', recipe: null });
   };
+
+  useEffect(() => {
+    fetchCuisinesData().then(setCuisines);
+  }, []);
+
+  useEffect(() => {
+    dispatch({ type: 'recipes/fetchRecipesSaga' });
+  }, [dispatch]);
 
   // Avatar card layout
   return (
@@ -204,55 +224,56 @@ export default function AdminRecipes() {
         <span style={{ fontWeight: 800, fontSize: 18, color: '#b03060' }}>{recipes.length}</span>
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, alignItems: 'center', justifyContent: 'center', margin: '48px 0' }}>
-        {loading ? (
+        {recipes.length === 0 ? (
           Array.from({ length: 8 }).map((_, idx) => (
             <div key={idx} style={{ width: 100, height: 100, borderRadius: '50%', background: '#eee', animation: 'pulse 1.2s infinite' }} />
           ))
         ) : (
-          recipes.map(recipe => (
-            <div
-              key={recipe.id}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                width: 120,
-                cursor: 'pointer',
-                background: 'none',
-              }}
-              onMouseEnter={() => setHoveredCard(recipe.id)}
-              onMouseLeave={() => setHoveredCard(null)}
-              onClick={() => setActionModal({ recipe })}
-            >
-              <img
-                src={recipe.image || 'https://via.placeholder.com/80x80?text=No+Image'}
-                alt={recipe.name}
+          <>
+            {recipes.map(recipe => (
+              <div
+                key={recipe.id}
                 style={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: '50%',
-                  objectFit: 'cover',
-                  border: '2px solid #e75480',
-                  marginBottom: 8,
-                  transition: 'box-shadow 0.18s, transform 0.18s',
-                  boxShadow: hoveredCard === recipe.id ? '0 4px 16px rgba(110,58,89,0.13)' : 'none',
-                  transform: hoveredCard === recipe.id ? 'translateY(-6px) scale(1.04)' : 'none',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  width: 120,
+                  cursor: 'pointer',
+                  background: 'none',
                 }}
-              />
-              <div style={{ fontWeight: 700, fontSize: 14, textAlign: 'center', marginBottom: 4 }}>{recipe.name}</div>
+                onMouseEnter={() => setHoveredCard(recipe.id)}
+                onMouseLeave={() => setHoveredCard(null)}
+                onClick={() => setActionModal({ recipe })}
+              >
+                <img
+                  src={recipe.image || 'https://via.placeholder.com/80x80?text=No+Image'}
+                  alt={recipe.name}
+                  style={{
+                    width: 80,
+                    height: 80,
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    border: '2px solid #e75480',
+                    marginBottom: 8,
+                    transition: 'box-shadow 0.18s, transform 0.18s',
+                    boxShadow: hoveredCard === recipe.id ? '0 4px 16px rgba(110,58,89,0.13)' : 'none',
+                    transform: hoveredCard === recipe.id ? 'translateY(-6px) scale(1.04)' : 'none',
+                  }}
+                />
+                <div style={{ fontWeight: 700, fontSize: 14, textAlign: 'center', marginBottom: 4 }}>{recipe.name}</div>
+              </div>
+            ))}
+            {/* Add Recipe Button always at the end */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 120 }}>
+              <button
+                style={{ width: 80, height: 80, borderRadius: '50%', background: '#6e3a59', color: '#fff', fontSize: 36, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8, cursor: 'pointer' }}
+                onClick={openAddModal}
+                aria-label="Add Recipe"
+              >+
+              </button>
+              <div style={{ fontWeight: 700, fontSize: 14, textAlign: 'center' }}>Add Recipe</div>
             </div>
-          ))
-        )}
-        {/* Add Recipe Button */}
-        {!loading && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 120 }}>
-            <button
-              style={{ width: 80, height: 80, borderRadius: '50%', background: '#6e3a59', color: '#fff', fontSize: 36, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8, cursor: 'pointer' }}
-              onClick={openAddModal}
-              aria-label="Add Recipe"
-            >+</button>
-            <div style={{ fontWeight: 700, fontSize: 14, textAlign: 'center' }}>Add Recipe</div>
-          </div>
+          </>
         )}
       </div>
       {/* Action Modal for Update/Delete */}
@@ -296,8 +317,8 @@ export default function AdminRecipes() {
               onClick={() => { setActionModal(null); openDeleteModal(actionModal.recipe); }}
             >Delete</button>
           </div>
-        </>
-      )}
+            </>
+          )}
       {/* Add/Update/Delete Modals */}
       <Modal open={modal && modal.type === 'add'} onClose={() => setModal(null)}>
         <h2 style={{ color: '#e75480', marginBottom: 16 }}>Add Recipe</h2>
@@ -307,8 +328,13 @@ export default function AdminRecipes() {
             cuisine: '',
             difficulty: 'Easy',
             ingredients: '',
+            instructions: '',
+            prepTimeMinutes: '',
+            cookTimeMinutes: '',
+            servings: '',
             image: '',
-            uploadedImage: ''
+            uploadedImage: '',
+            uploadedImageFile: null
           }}
           validate={values => {
             const errors = {};
@@ -321,18 +347,18 @@ export default function AdminRecipes() {
           onSubmit={(values, { setSubmitting, resetForm }) => {
             const imageToUse = values.uploadedImage || values.image;
             const newRecipe = {
-              id: Date.now(),
               name: values.name,
+              title: values.name,
               cuisine: values.cuisine,
               difficulty: values.difficulty,
               ingredients: values.ingredients.split(',').map(i => i.trim()).filter(Boolean),
+              instructions: values.instructions.split('\n').map(i => i.trim()).filter(Boolean),
+              prepTimeMinutes: values.prepTimeMinutes ? Number(values.prepTimeMinutes) : undefined,
+              cookTimeMinutes: values.cookTimeMinutes ? Number(values.cookTimeMinutes) : undefined,
+              servings: values.servings ? Number(values.servings) : undefined,
               image: imageToUse,
             };
-            setRecipes(prev => {
-              const updated = [...prev, newRecipe];
-              console.log('Updated recipes:', updated);
-              return updated;
-            });
+            dispatch(addRecipeSaga(newRecipe));
             setSuccess('Recipe added!');
             setModal(null);
             resetForm();
@@ -346,35 +372,55 @@ export default function AdminRecipes() {
               <ErrorMessage name="name" component="div" style={{ color: '#b03060', fontSize: 13, marginBottom: 4 }} />
               <Field as="select" style={inputStyle} name="cuisine" required>
                 <option value="">Select Cuisine</option>
-                {cuisinesData.map(c => (
-                  <option key={c.name} value={c.name}>{c.name}</option>
+                {cuisines.map(c => (
+                  <option key={c.id || c.name} value={c.name}>{c.name}</option>
                 ))}
               </Field>
               <ErrorMessage name="cuisine" component="div" style={{ color: '#b03060', fontSize: 13, marginBottom: 4 }} />
               <Field as="textarea" style={{ ...inputStyle, minHeight: 36 }} name="ingredients" required placeholder="Ingredients (comma separated)" />
               <ErrorMessage name="ingredients" component="div" style={{ color: '#b03060', fontSize: 13, marginBottom: 4 }} />
+              <Field as="textarea" style={{ ...inputStyle, minHeight: 80 }} name="instructions" required placeholder="Instructions (one step per line)" />
+              <ErrorMessage name="instructions" component="div" style={{ color: '#b03060', fontSize: 13, marginBottom: 4 }} />
               <Field as="select" style={inputStyle} name="difficulty">
-                <option value="Easy">Easy</option>
-                <option value="Medium">Medium</option>
-                <option value="Hard">Hard</option>
+            <option value="Easy">Easy</option>
+            <option value="Medium">Medium</option>
+            <option value="Hard">Hard</option>
               </Field>
               <Field style={inputStyle} name="image" placeholder="Image URL (optional)" />
               <div style={{ margin: '10px 0' }}>
                 <label style={{ fontWeight: 700 }}>Or Upload Image: </label>
-                <input type="file" accept="image/*" onChange={e => {
-                  const file = e.target.files[0];
-                  if (file) {
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                      setFieldValue('uploadedImage', reader.result);
-                    };
-                    reader.readAsDataURL(file);
-                  }
-                }} />
+                <input type="file" accept="image/*" onChange={handleImageUpload} />
               </div>
               {values.uploadedImage && (
                 <img src={values.uploadedImage} alt="Preview" style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', margin: '10px 0' }} />
               )}
+              <label style={{ fontWeight: 700, marginTop: 12 }}>Prep Time (minutes):</label>
+              <input
+                style={inputStyle}
+                type="number"
+                min="0"
+                value={values.prepTimeMinutes}
+                onChange={e => setFieldValue('prepTimeMinutes', e.target.value)}
+                placeholder="e.g. 10"
+              />
+              <label style={{ fontWeight: 700, marginTop: 12 }}>Cook Time (minutes):</label>
+              <input
+                style={inputStyle}
+                type="number"
+                min="0"
+                value={values.cookTimeMinutes}
+                onChange={e => setFieldValue('cookTimeMinutes', e.target.value)}
+                placeholder="e.g. 20"
+              />
+              <label style={{ fontWeight: 700, marginTop: 12 }}>Serves:</label>
+              <input
+                style={inputStyle}
+                type="number"
+                min="1"
+                value={values.servings}
+                onChange={e => setFieldValue('servings', e.target.value)}
+                placeholder="e.g. 4"
+              />
               <button style={{ ...buttonStyle, width: '100%', marginTop: 12 }} type="submit" disabled={isSubmitting}>Add</button>
             </Form>
           )}
@@ -388,8 +434,13 @@ export default function AdminRecipes() {
             cuisine: form.cuisine,
             difficulty: form.difficulty,
             ingredients: form.ingredients,
+            instructions: form.instructions,
+            prepTimeMinutes: form.prepTimeMinutes,
+            cookTimeMinutes: form.cookTimeMinutes,
+            servings: form.servings,
             image: form.image,
-            uploadedImage: form.uploadedImage || ''
+            uploadedImage: form.uploadedImage || '',
+            uploadedImageFile: form.uploadedImageFile || null
           }}
           enableReinitialize
           validate={values => {
@@ -401,11 +452,7 @@ export default function AdminRecipes() {
             return errors;
           }}
           onSubmit={(values, { setSubmitting, resetForm }) => {
-            setRecipes(prev => {
-              const updated = prev.map(r => r.id === modal.recipe.id ? { ...r, ...values, ingredients: values.ingredients.split(',').map(i => i.trim()).filter(Boolean) } : r);
-              console.log('Updated recipes:', updated);
-              return updated;
-            });
+            dispatch(updateRecipeSaga({ ...values, ingredients: values.ingredients.split(',').map(i => i.trim()).filter(Boolean), instructions: values.instructions.split('\n').map(i => i.trim()).filter(Boolean), prepTimeMinutes: values.prepTimeMinutes ? Number(values.prepTimeMinutes) : undefined, cookTimeMinutes: values.cookTimeMinutes ? Number(values.cookTimeMinutes) : undefined, servings: values.servings ? Number(values.servings) : undefined, image: values.image, id: modal.recipe.id }));
             setSuccess('Recipe updated!');
             setModal(null);
             resetForm();
@@ -419,19 +466,55 @@ export default function AdminRecipes() {
               <ErrorMessage name="name" component="div" style={{ color: '#b03060', fontSize: 13, marginBottom: 4 }} />
               <Field as="select" style={inputStyle} name="cuisine" required>
                 <option value="">Select Cuisine</option>
-                {cuisinesData.map(c => (
-                  <option key={c.name} value={c.name}>{c.name}</option>
+                {cuisines.map(c => (
+                  <option key={c.id || c.name} value={c.name}>{c.name}</option>
                 ))}
               </Field>
               <ErrorMessage name="cuisine" component="div" style={{ color: '#b03060', fontSize: 13, marginBottom: 4 }} />
               <Field as="textarea" style={{ ...inputStyle, minHeight: 36 }} name="ingredients" required placeholder="Ingredients (comma separated)" />
               <ErrorMessage name="ingredients" component="div" style={{ color: '#b03060', fontSize: 13, marginBottom: 4 }} />
+              <Field as="textarea" style={{ ...inputStyle, minHeight: 80 }} name="instructions" required placeholder="Instructions (one step per line)" />
+              <ErrorMessage name="instructions" component="div" style={{ color: '#b03060', fontSize: 13, marginBottom: 4 }} />
               <Field as="select" style={inputStyle} name="difficulty">
                 <option value="Easy">Easy</option>
                 <option value="Medium">Medium</option>
                 <option value="Hard">Hard</option>
               </Field>
               <Field style={inputStyle} name="image" placeholder="Image URL (optional)" />
+              <div style={{ margin: '10px 0' }}>
+                <label style={{ fontWeight: 700 }}>Or Upload Image: </label>
+                <input type="file" accept="image/*" onChange={handleImageUpload} />
+              </div>
+              {values.uploadedImage && (
+                <img src={values.uploadedImage} alt="Preview" style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', margin: '10px 0' }} />
+              )}
+              <label style={{ fontWeight: 700, marginTop: 12 }}>Prep Time (minutes):</label>
+              <input
+                style={inputStyle}
+                type="number"
+                min="0"
+                value={values.prepTimeMinutes}
+                onChange={e => setFieldValue('prepTimeMinutes', e.target.value)}
+                placeholder="e.g. 10"
+              />
+              <label style={{ fontWeight: 700, marginTop: 12 }}>Cook Time (minutes):</label>
+              <input
+                style={inputStyle}
+                type="number"
+                min="0"
+                value={values.cookTimeMinutes}
+                onChange={e => setFieldValue('cookTimeMinutes', e.target.value)}
+                placeholder="e.g. 20"
+              />
+              <label style={{ fontWeight: 700, marginTop: 12 }}>Serves:</label>
+              <input
+                style={inputStyle}
+                type="number"
+                min="1"
+                value={values.servings}
+                onChange={e => setFieldValue('servings', e.target.value)}
+                placeholder="e.g. 4"
+              />
               <button style={{ ...buttonStyle, width: '100%', marginTop: 12 }} type="submit" disabled={isSubmitting}>Update</button>
             </Form>
           )}

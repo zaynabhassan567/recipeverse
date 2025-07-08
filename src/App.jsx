@@ -1,6 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import TopBar from './components/TopBar';
+import {getFirestore} from 'firebase/firestore'
+import {app} from './firebase'
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -16,7 +18,6 @@ import AdminLayout from './pages/AdminLayout';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminRecipes from './pages/AdminRecipes';
 import AdminCuisines from './pages/AdminCuisines';
-import { RecipesProvider } from './contexts/RecipesContext';
 import './styles/global.css';
 import StartHere from './pages/StartHere';
 import { auth } from './firebase';
@@ -80,9 +81,7 @@ function AppRoutes() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/admin" element={
           <ProtectedRoute>
-            <RecipesProvider>
-              <AdminLayout />
-            </RecipesProvider>
+            <AdminLayout />
           </ProtectedRoute>
         }>
           <Route index element={<AdminDashboard />} />

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
+import { searchRecipes } from '../services/recipeApi';
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
@@ -14,10 +15,9 @@ export default function SearchResultsPage() {
   useEffect(() => {
     if (!query) return;
     setLoading(true);
-    fetch(`https://dummyjson.com/recipes/search?q=${encodeURIComponent(query)}`)
-      .then(res => res.json())
-      .then(data => {
-        setRecipes(data.recipes || []);
+    searchRecipes(query)
+      .then(results => {
+        setRecipes(results || []);
         setLoading(false);
       })
       .catch(() => {

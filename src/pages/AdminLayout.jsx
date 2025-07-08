@@ -218,7 +218,7 @@ export default function AdminLayout() {
           )}
         </>
       ) : (
-        <div style={sidebarStyle}>
+      <div style={sidebarStyle}>
           <button
             className="admin-sidebar-btn"
             style={{
@@ -243,8 +243,8 @@ export default function AdminLayout() {
           >
             <span role="img" aria-label="Recipes">🍽️</span> RECIPES
           </button>
-          <button
-            className="admin-sidebar-btn"
+        <button
+          className="admin-sidebar-btn"
             style={{
               ...sidebarButtonBase,
               ...(isActive('/admin/cuisines') ? sidebarButtonActive : {}),
@@ -252,10 +252,10 @@ export default function AdminLayout() {
             onClick={() => navigate('/admin/cuisines')}
             onMouseOver={e => Object.assign(e.currentTarget.style, sidebarButtonHover)}
             onMouseOut={e => Object.assign(e.currentTarget.style, isActive('/admin/cuisines') ? sidebarButtonActive : sidebarButtonBase)}
-          >
+        >
             <span role="img" aria-label="Cuisines">🍲</span> CUISINES
-          </button>
-        </div>
+        </button>
+      </div>
       )}
       {/* Topbar */}
       <div style={topbarStyle}>

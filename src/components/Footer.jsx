@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FaInstagram, FaPinterest, FaTiktok, FaFacebookF, FaTimes, FaYoutube } from 'react-icons/fa';
 import foodblogger from '../assets/foodblogger.png';
 import clariti from '../assets/clariti.png';
 import '../styles/global.css';
-import { cuisinesData } from '../utils/cusinesData';
+import { fetchCuisinesData } from '../utils/cusinesData';
 
 const links1 = [
   { label: 'About', href: '/about' },
@@ -15,14 +15,13 @@ const links1 = [
   { label: 'Media Mentions', href: '/media' },
   { label: 'Contact', href: '/contact' },
 ];
-const links2 = cuisinesData
-  .slice(0, cuisinesData.findIndex(c => c.name === 'Moroccan') + 1)
-  .map(cuisine => ({
-    label: cuisine.name,
-    href: `/recipes/${cuisine.name.toLowerCase()}`
-  }));
 
 export default function Footer() {
+  const [cuisines, setCuisines] = useState([]);
+  useEffect(() => {
+    fetchCuisinesData().then(setCuisines);
+  }, []);
+
   return (
     <footer style={{ background: '#fff', marginTop: 48, padding: '0 0 32px 0', borderTop: '1px solid #e5e5e5' }}>
       <div className="footer-outer">
@@ -37,8 +36,8 @@ export default function Footer() {
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 700, letterSpacing: '0.08em', fontSize: 14, marginBottom: 12 }}>FOOD & RECIPES</div>
-              {links2.map(link => (
-                <a key={link.label} href={link.href} style={{ fontSize: 15, color: '#444', marginBottom: 6, display: 'block', textDecoration: 'none' }}>{link.label}</a>
+              {cuisines.map(cuisine => (
+                <a key={cuisine.id || cuisine.name} href={`/recipes/${cuisine.name.toLowerCase()}`} style={{ fontSize: 15, color: '#444', marginBottom: 6, display: 'block', textDecoration: 'none' }}>{cuisine.name}</a>
               ))}
             </div>
           </div>

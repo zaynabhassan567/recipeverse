@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend, PieChart, Pie, Cell } from 'recharts';
-import { cuisinesData } from '../utils/cusinesData';
+import { fetchCuisinesData } from '../utils/cusinesData';
 
 const DIFFICULTY_COLORS = ['#20bf6b', '#f7b731', '#eb3b5a']; // Easy, Medium, Hard
 const DIFFICULTY_LABELS = ['Easy', 'Medium', 'Hard'];
@@ -9,6 +9,7 @@ export default function AdminDashboard() {
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [cuisines, setCuisines] = useState([]);
 
   useEffect(() => {
     setLoading(true);
@@ -22,6 +23,10 @@ export default function AdminDashboard() {
         setError('Failed to fetch recipes.');
         setLoading(false);
       });
+  }, []);
+
+  useEffect(() => {
+    fetchCuisinesData().then(setCuisines);
   }, []);
 
   // Top 5 rated recipes
@@ -57,7 +62,7 @@ export default function AdminDashboard() {
             {/* Total Cuisines Card */}
             <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 2px 12px rgba(110,58,89,0.07)', padding: 32, minWidth: 220, maxWidth: 260, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
               <div style={{ fontSize: 22, color: '#b03060', fontWeight: 800, marginBottom: 8 }}>Total Cuisines</div>
-              <div style={{ fontSize: 48, fontWeight: 900, color: '#e75480' }}>{cuisinesData.length}</div>
+              <div style={{ fontSize: 48, fontWeight: 900, color: '#e75480' }}>{cuisines.length}</div>
             </div>
           </div>
           {/* Second row: All charts side by side, centered */}

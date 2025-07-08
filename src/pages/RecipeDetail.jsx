@@ -18,6 +18,10 @@ export default function RecipeDetail() {
   if (loading) return <div>Loading recipe...</div>;
   if (!recipe) return <div>Recipe not found.</div>;
 
+  // Support both 'ingredients' and 'Ingredients', and 'instructions' and 'Instructions'
+  const ingredients = recipe.ingredients || recipe.Ingredients || [];
+  const instructions = recipe.instructions || recipe.Instructions || [];
+
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: 24 }}>
       <h2 style={{ color: '#6e3a59', fontFamily: 'Lora, serif', fontWeight: 800, fontSize: 36, marginBottom: 18, textAlign: 'center' }}>{recipe.name}</h2>
@@ -41,7 +45,7 @@ export default function RecipeDetail() {
         <div style={{ flex: 1, minWidth: 260, background: '#faf9f7', borderRadius: 14, boxShadow: '0 2px 12px rgba(110,58,89,0.07)', padding: 24 }}>
           <h3 style={{ color: '#6e3a59', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 22, marginBottom: 12, textAlign: 'center' }}>Ingredients</h3>
           <ul style={{ paddingLeft: 20, fontSize: 17, color: '#333', marginBottom: 0 }}>
-            {recipe.ingredients && recipe.ingredients.map((ing, idx) => (
+            {ingredients.map((ing, idx) => (
               <li key={idx}>{ing}</li>
             ))}
           </ul>
@@ -49,7 +53,7 @@ export default function RecipeDetail() {
         <div style={{ flex: 2, minWidth: 320, background: '#faf9f7', borderRadius: 14, boxShadow: '0 2px 12px rgba(110,58,89,0.07)', padding: 24 }}>
           <h3 style={{ color: '#6e3a59', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 22, marginBottom: 12, textAlign: 'center' }}>Instructions</h3>
           <ol style={{ paddingLeft: 20, fontSize: 17, color: '#333' }}>
-            {recipe.instructions && recipe.instructions.map((step, idx) => (
+            {instructions.map((step, idx) => (
               <li key={idx} style={{ marginBottom: 10 }}>{step}</li>
             ))}
           </ol>

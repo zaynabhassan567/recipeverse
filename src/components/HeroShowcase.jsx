@@ -1,25 +1,30 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { cuisinesData } from '../utils/cusinesData';
+import { fetchCuisinesData } from '../utils/cusinesData';
 import '../styles/global.css';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 
-const heroCards = cuisinesData.slice(0, 4).map(cuisine => ({
-  title: cuisine.name,
-  image: cuisine.image,
-  link: `/recipes/${cuisine.name.toLowerCase()}`,
-}));
-
 export default function HeroShowcase() {
   const navigate = useNavigate();
   const [isDesktop, setIsDesktop] = React.useState(window.innerWidth > 900);
+  const [cuisines, setCuisines] = useState([]);
 
-  React.useEffect(() => {
+  useEffect(() => {
+    fetchCuisinesData().then(setCuisines);
+  }, []);
+
+  useEffect(() => {
     const handleResize = () => setIsDesktop(window.innerWidth > 900);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  const heroCards = cuisines.slice(0, 4).map(cuisine => ({
+    title: cuisine.name,
+    image: cuisine.image,
+    link: `/recipes/${cuisine.name.toLowerCase()}`,
+  }));
 
   return (
     <div className="hero-showcase">

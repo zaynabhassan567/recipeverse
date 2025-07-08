@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { cuisinesData } from '../utils/cusinesData';
-import { useRecipes } from '../contexts/RecipesContext';
+import { fetchCuisinesSaga, addCuisineSaga, updateCuisineSaga, deleteCuisineSaga } from '../cuisinesSlice';
+import { useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 
 const cardStyle = {
   background: '#fff',
@@ -88,9 +89,8 @@ function Modal({ open, onClose, children }) {
 }
 
 export default function AdminCuisines() {
-  const [cuisines, setCuisines] = useState([]);
-  const { recipes, setRecipes } = useRecipes();
-  const [loading, setLoading] = useState(true);
+  const cuisines = useSelector((state) => state.cuisines.items) || [];
+  const loading = useSelector((state) => state.cuisines.loading);
   const [modal, setModal] = useState(null); // { type: 'add'|'edit'|'delete', cuisine: object|null }
   const [form, setForm] = useState({ name: '', description: '', image: '', uploadedImage: '' });
   const [success, setSuccess] = useState('');
@@ -98,20 +98,12 @@ export default function AdminCuisines() {
   const [recipeForm, setRecipeForm] = useState({ name: '', cuisine: '', difficulty: 'Easy', ingredients: '', image: '', uploadedImage: '' });
   const [hoveredCard, setHoveredCard] = useState(null);
 
+  const recipes = useSelector((state) => state.recipes.items) || [];
+  const dispatch = useDispatch();
+
   useEffect(() => {
-    setLoading(true);
-    fetch('https://dummyjson.com/recipes/cuisines')
-      .then(res => res.json())
-      .then(data => {
-        if (data.cuisines && data.cuisines.length > 0) {
-          setCuisines(data.cuisines);
-        } else {
-          setCuisines(cuisinesData);
-        }
-      })
-      .catch(() => setCuisines(cuisinesData))
-      .finally(() => setLoading(false));
-  }, []);
+    dispatch(fetchCuisinesSaga());
+  }, [dispatch]);
 
   // Count recipes per cuisine
   const cuisineCounts = cuisines.reduce((acc, c) => {
@@ -140,11 +132,7 @@ export default function AdminCuisines() {
       description: form.description,
       image: imageToUse,
     };
-    setCuisines(prev => {
-      const updated = [...prev, newCuisine];
-      console.log('Updated cuisines:', updated);
-      return updated;
-    });
+    dispatch(addCuisineSaga(newCuisine));
     setSuccess('Cuisine added!');
     setModal(null);
     setForm({ name: '', description: '', image: '', uploadedImage: '' });
@@ -158,11 +146,7 @@ export default function AdminCuisines() {
   function handleEditCuisine(e) {
     e.preventDefault();
     const imageToUse = form.uploadedImage || form.image;
-    setCuisines(prev => {
-      const updated = prev.map(c => c.name === modal.cuisine.name ? { ...c, ...form, image: imageToUse } : c);
-      console.log('Updated cuisines:', updated);
-      return updated;
-    });
+    dispatch(updateCuisineSaga({ ...form, image: imageToUse, id: modal.cuisine.id }));
     setSuccess('Cuisine updated!');
     setModal(null);
     setForm({ name: '', description: '', image: '', uploadedImage: '' });
@@ -171,11 +155,7 @@ export default function AdminCuisines() {
 
   // Delete Cuisine
   function handleDeleteCuisine() {
-    setCuisines(prev => {
-      const updated = prev.filter(c => c.name !== modal.cuisine.name);
-      console.log('Updated cuisines:', updated);
-      return updated;
-    });
+    dispatch(deleteCuisineSaga(modal.cuisine.id));
     setSuccess('Cuisine deleted!');
     setModal(null);
     setTimeout(() => setSuccess(''), 2000);
@@ -211,11 +191,6 @@ export default function AdminCuisines() {
       ingredients: recipeForm.ingredients.split(',').map(i => i.trim()).filter(Boolean),
       image: imageToUse,
     };
-    setRecipes(prev => {
-      const updated = [...prev, newRecipe];
-      console.log('Updated recipes:', updated);
-      return updated;
-    });
     setAddRecipeModal(null);
     setRecipeForm({ name: '', cuisine: recipeForm.cuisine, difficulty: 'Easy', ingredients: '', image: '', uploadedImage: '' });
   }

@@ -1,17 +1,16 @@
-import { cuisinesData } from "../utils/cusinesData";
-
-const BASE_URL = 'https://dummyjson.com/recipes';
+import { collection, getDocs, doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { db } from '../firebase';
+import { fetchCuisinesData } from "../utils/cusinesData";
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '../firebase';
 
 /**
- * Fetch all recipes (paginated).
- * @param {number} limit - Number of recipes to fetch.
- * @param {number} skip - Number of recipes to skip.
+ * Fetch all recipes from Firestore.
  */
-export const fetchAllRecipes = async (limit = 20, skip = 0) => {
+export const fetchAllRecipes = async () => {
   try {
-    const response = await fetch(`${BASE_URL}?limit=${limit}&skip=${skip}`);
-    const data = await response.json();
-    return data.recipes; // returns an array
+    const querySnapshot = await getDocs(collection(db, 'recipes'));
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   } catch (error) {
     console.error('Error fetching recipes:', error);
     return [];
@@ -19,14 +18,18 @@ export const fetchAllRecipes = async (limit = 20, skip = 0) => {
 };
 
 /**
- * Fetch a single recipe by ID.
- * @param {number} id - The recipe ID.
+ * Fetch a single recipe by Firestore ID.
+ * @param {string} id - The Firestore document ID (e.g., '01').
  */
 export const fetchRecipeById = async (id) => {
   try {
-    const response = await fetch(`${BASE_URL}/${id}`);
-    const data = await response.json();
-    return data;
+    const docRef = doc(db, 'recipes', id);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...docSnap.data() };
+    } else {
+      return null;
+    }
   } catch (error) {
     console.error(`Error fetching recipe with id ${id}:`, error);
     return null;
@@ -34,14 +37,16 @@ export const fetchRecipeById = async (id) => {
 };
 
 /**
- * Search recipes by name.
+ * Search recipes by name (client-side filter).
  * @param {string} query - Search keyword.
  */
 export const searchRecipes = async (query) => {
   try {
-    const response = await fetch(`${BASE_URL}/search?q=${query}`);
-    const data = await response.json();
-    return data.recipes;
+    const allRecipes = await fetchAllRecipes();
+    return allRecipes.filter(recipe =>
+      (recipe.title && recipe.title.toLowerCase().includes(query.toLowerCase())) ||
+      (recipe.name && recipe.name.toLowerCase().includes(query.toLowerCase()))
+    );
   } catch (error) {
     console.error(`Error searching for recipes with query "${query}":`, error);
     return [];
@@ -49,14 +54,14 @@ export const searchRecipes = async (query) => {
 };
 
 /**
- * Filter recipes by cuisine type.
+ * Filter recipes by cuisine type (client-side filter).
  * @param {string} cuisine - Cuisine type (e.g., "Italian", "Indian")
  */
 export const filterRecipesByCuisine = async (cuisine) => {
   try {
-    const allRecipes = await fetchAllRecipes(100); // dummyjson doesn't support filtering directly
+    const allRecipes = await fetchAllRecipes();
     return allRecipes.filter(recipe =>
-      recipe.cuisine.toLowerCase() === cuisine.toLowerCase()
+      recipe.cuisine && recipe.cuisine.toLowerCase() === cuisine.toLowerCase()
     );
   } catch (error) {
     console.error(`Error filtering recipes by cuisine "${cuisine}":`, error);
@@ -64,15 +69,14 @@ export const filterRecipesByCuisine = async (cuisine) => {
   }
 };
 
-
 /**
  * Fetch all recipe cuisine types.
  * @returns {Promise<string[]>} - Array of unique cuisine types.
  */
-export  const fetchRecipeCusineTypes = async () => {
- try {
-    const allCuisines = [...cuisinesData]; // dummyjson doesn't support filtering directly
-    return allCuisines;
+export const fetchRecipeCusineTypes = async () => {
+  try {
+    const cuisines = await fetchCuisinesData();
+    return cuisines;
   } catch (error) {
     console.error(`Error getting recipe cuisines:`, error);
     return [];
@@ -85,10 +89,37 @@ export  const fetchRecipeCusineTypes = async () => {
  */
 export const fetchCusineDetails = async (cuisine) => {
   try {
-    const allCuisines = await fetchRecipeCusineTypes();
-    return allCuisines.find(c => c.name.toLowerCase() === cuisine.toLowerCase());
+    const cuisines = await fetchCuisinesData();
+    return cuisines.find(c => c.name.toLowerCase() === cuisine.toLowerCase());
   } catch (error) {
     console.error(`Error fetching cuisine details for "${cuisine}":`, error);
     return null;
   }
 }
+
+/**
+ * Subscribe to real-time updates for all recipes.
+ * @param {function} callback - Called with the array of recipes whenever they change.
+ * @returns {function} - Unsubscribe function.
+ */
+export const subscribeToAllRecipes = (callback) => {
+  const unsubscribe = onSnapshot(collection(db, 'recipes'), (querySnapshot) => {
+    const recipes = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    callback(recipes);
+  });
+  return unsubscribe;
+};
+
+/**
+ * Upload a recipe image file to Firebase Storage and return the download URL.
+ * @param {File} file - The image file to upload.
+ * @param {string} recipeName - The recipe name (used for file naming).
+ * @returns {Promise<string>} - The download URL of the uploaded image.
+ */
+export const uploadRecipeImage = async (file, recipeName) => {
+  if (!file) throw new Error('No file provided');
+  const storageRef = ref(storage, `recipe-images/${recipeName.replace(/\s+/g, '_')}_${Date.now()}`);
+  await uploadBytes(storageRef, file);
+  const url = await getDownloadURL(storageRef);
+  return url;
+};
